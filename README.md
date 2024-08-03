@@ -36,7 +36,7 @@ gradle bootRun
 
 ## API Endpoints
 
-- GET: http://localhost:8080/{username}
+- GET: http://localhost:8080/users/{username}
 
 ## Internals Insight
 
