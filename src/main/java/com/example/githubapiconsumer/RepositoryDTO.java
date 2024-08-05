@@ -1,7 +1,8 @@
 package com.example.githubapiconsumer;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class RepositoryDTO {
@@ -27,4 +28,15 @@ public class RepositoryDTO {
     public List<BranchDTO> getBranches() {
         return branches;
     }
+     
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RepositoryDTO that = (RepositoryDTO) o;
+        return repositoryName.equals(that.repositoryName) &&
+               ownerLogin.equals(that.ownerLogin) &&
+               branches.equals(that.branches);
+    }
+
 }

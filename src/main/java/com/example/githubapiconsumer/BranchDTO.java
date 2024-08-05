@@ -20,4 +20,15 @@ public class BranchDTO {
     public String getLastCommitSha() {
         return lastCommitSha;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BranchDTO that = (BranchDTO) o;
+
+        return name.equals(that.name) &&
+            lastCommitSha.equals(that.lastCommitSha);
+    }
+
 }

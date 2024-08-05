@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @ControllerAdvice 
 public class CustomExceptionHandler { 
@@ -26,20 +28,29 @@ public class CustomExceptionHandler {
 
         log.error("Unexpected error!", e);
 
-        ErrorData errorData = new ErrorData(HttpStatus.NOT_FOUND.value(), "An unexpected error occurred!");
+        ErrorData errorData = new ErrorData(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred!");
 
         return new ResponseEntity<>(errorData, HttpStatus.INTERNAL_SERVER_ERROR); 
 
     }
 
-    @ExceptionHandler(WebClientResponseException.class)
+    @ExceptionHandler({WebClientResponseException.class, ResponseStatusException.class})
     public ResponseEntity<ErrorData> handleWebClientResponseException(WebClientResponseException e) {
 
-        log.error("Web Client error!", e);
+        log.error("Error with known status code!", e);
 
         ErrorData errorData = new ErrorData(e.getStatusCode().value(), e.getMessage());
 
         return new ResponseEntity<>(errorData, e.getStatusCode()); 
     }
+
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorData> handleNoHandlerFoundException(NoHandlerFoundException e) {
+        log.error("No url found for request", e);
+        ErrorData errorData = new ErrorData(HttpStatus.NOT_FOUND.value(), "URL not found");
+        return new ResponseEntity<>(errorData, HttpStatus.NOT_FOUND);
+    }
+    
 
 }

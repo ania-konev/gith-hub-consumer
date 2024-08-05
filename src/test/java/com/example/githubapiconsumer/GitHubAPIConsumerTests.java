@@ -1,48 +1,125 @@
-// package com.example.githubapiconsumer;
+package com.example.githubapiconsumer;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import java.util.List;
+
+@WebFluxTest(GitHubUserController.class)
+@Import(WebClientConfiguration.class)
+@TestPropertySource(properties = { "github.Url = http://localhost:8088"})   
+@WireMockTest(httpPort = 8088)
+public class GitHubAPIConsumerTests {
+
+    @Autowired
+    private WebTestClient webTestClient;
+
+	@Test
+	void testUserNotFound() {
+        stubFor(
+            WireMock.get(urlMatching("/users/usernotexist/repos"))   //robie wiremock zeby nie odpytywac githuba
+             .willReturn(aResponse().withStatus(404)));
+
+        webTestClient.get().uri("/users/usernotexist")
+             .exchange()
+             .expectStatus().isNotFound()
+             .expectBody(ErrorData.class);
+	}
 
 
-// import org.junit.jupiter.api.Test;
-// import org.mockito.Mockito;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-// import org.springframework.boot.test.mock.mockito.MockBean;
+    @Test
+	void testAllRepositoriesForked() {
+
+        stubFor(
+            WireMock.get(urlMatching("/users/testuser/repos"))
+             .willReturn(okJson("""
+                [
+                    {"name": "repo1", "fork": true, "owner": {"login": "testuser"}},
+                    {"name": "repo2", "fork": true, "owner": {"login": "testuser"}}
+                ]
+                """)));
+
+        webTestClient.get().uri("/users/testuser")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RepositoryDTO.class)
+                .hasSize(0);
+	}
 
 
-// import org.springframework.http.HttpStatusCode;
-// import org.springframework.test.web.reactive.server.WebTestClient;
-// import org.springframework.web.reactive.function.client.WebClient;
-// import org.springframework.web.reactive.function.client.WebClientResponseException;
+    @Test
+	void testProperResponse() {
+
+        stubFor(
+            WireMock.get(urlMatching("/users/properuser/repos"))
+             .willReturn(okJson("""
+                [
+                    {"name": "repo1", "owner": {"login": "properuser"},"fork": true},
+                    {"name": "repo2", "owner": {"login": "properuser"}, "fork": false},
+                    {"name": "repo3", "owner": {"login": "properuser"}, "fork": false},
+                    {"name": "repo4", "owner": {"login": "properuser"}, "fork": true}
+                ]
+                """)));
 
 
-// @WebFluxTest(GitHubUserController.class)
-// class GitHubAPIConsumerTests {
+        stubFor(
+            WireMock.get(urlMatching("/repos/properuser/repo2/branches"))  
+            //bo tu w tych body musi byc tak jak w githubie odpowiedz jest
+             .willReturn(okJson("""
+                [
+                    {"name": "branch1", "commit": {"sha": "sha1"}},
+                    {"name": "branch2", "commit": {"sha": "sha2"}}
+                ]
+                """)));        
 
-// 	@Autowired
-// 	private WebTestClient webClient;
+        stubFor(
+            WireMock.get(urlMatching("/repos/properuser/repo3/branches"))
+                .willReturn(okJson("""
+                [
+                    {"name": "branch1", "commit": {"sha": "sha1"}},
+                    {"name": "branch2", "commit": {"sha": "sha2"}}
+                ]
+                """)));     
 
-// 	@MockBean
-//     private WebClient mockedClient;
+        webTestClient.get().uri("/users/properuser")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RepositoryDTO.class)
+                .hasSize(2)
+                .contains(
+                    new RepositoryDTO(
+                   "repo2",
+             "properuser", 
+                        List.of(
+                            new BranchDTO("branch1", "sha1"),
+                            new BranchDTO("branch2", "sha2")
+                            )
+                    ),
 
-// 	@Test
-// 	void testUserNotFound() {
-// 		String username = "testUser";
-
-// 		Mockito.when(mockedClient.get()
-// 		// .uri(Mockito.anyString(), Mockito.anyString()))
-// 		// .retrieve()
-//             // .bodyToFlux(RepositoryInfo.class))
-// 			.thenThrow(new WebClientResponseException(HttpStatusCode.valueOf(404), 
-// 				"User not found", null, null, null, null));
-
-// 		this.webClient.get().uri("/{username}", username).exchange().expectStatus().isNotFound()
-// 		.expectBody(String.class).isEqualTo("Hello World");
-
-// 	}
+                    new RepositoryDTO(
+                   "repo3",
+             "properuser", 
+                        List.of(
+                            new BranchDTO("branch1", "sha1"),
+                            new BranchDTO("branch2", "sha2")
+                            )
+                    )
+                );    
+	}
 
 
-// 	@Test
-// 	void testAllRepositoriesForked() {
-// 	}
+    @Test
+	void testPathNotFound   () {
 
+        webTestClient.get().uri("/notexisting/path")
+             .exchange()
+             .expectStatus().isNotFound();
+	}
 
-// }
+}

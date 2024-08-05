@@ -1,8 +1,8 @@
 package com.example.githubapiconsumer;
 
-import org.springframework.context.annotation.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,13 +13,13 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
-@Configuration
 @RestController
 public class GitHubUserController {
 
     private static final Logger log = LoggerFactory.getLogger(GitHubUserController.class);
 
-    private final WebClient client =  WebClient.create("https://api.github.com");
+    @Autowired
+    private WebClient client;
 
     @GetMapping(value = "/users/{username}", headers = "Accept=application/json")
     public Flux<RepositoryDTO> repositoryInfo(@PathVariable String username ) {
@@ -29,11 +29,12 @@ public class GitHubUserController {
             .retrieve()
             .bodyToFlux(RepositoryInfo.class)
             .onErrorResume(WebClientResponseException.NotFound.class, e -> {
+                log.error(e.getMessage());
                 throw new UserNotFoundException(username);
             })
-            .filter(info -> !info.fork())
-            .doOnNext(info -> log.warn(info.toString())) 
-            .flatMap(info -> getBranches(username, info));
+            .filter(repo -> !repo.fork())
+            .doOnNext(repo -> log.info(repo.toString())) 
+            .flatMap(repo -> getBranches(username, repo));
         } 
 
     private Mono<RepositoryDTO> getBranches(String username, RepositoryInfo info) {
