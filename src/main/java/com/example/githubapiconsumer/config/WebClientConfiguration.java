@@ -10,11 +10,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 @PropertySource("classpath:/config.properties")
 public class WebClientConfiguration {
 
-    @Value("${github.Url}")
-    private String githubUrl;
+    @Value("${github.url}")
+    private String githuburl;
 
     @Bean
     public WebClient webClient() {
-        return WebClient.builder().baseUrl(githubUrl).build();
+        return WebClient.builder().baseUrl(githuburl).build();
     }
 }

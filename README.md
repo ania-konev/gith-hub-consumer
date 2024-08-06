@@ -1,6 +1,6 @@
 # GitHub API Consumer
 
-This Spring Boot application retrieves and displays a list of GitHub repositories for a specified user with header “Accept: application/json”, excluding forked repositories. Additionally, it provides branch details for each repository with its name and last commit sha.
+This Spring Boot application retrieves and displays a list of GitHub repositories for a specified user, excluding forked repositories. Additionally, it provides branch details for each repository with its name and last commit sha.
 
 - Backing API: https://developer.github.com/v3
 
@@ -31,7 +31,7 @@ To install dependencies and build the application through Gradle you have run:
 ### To start the application
 
 ```
-gradle bootRun
+./gradlew bootRun
 ```
 
 ## API Endpoints

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.NoHandlerFoundException;
 import com.example.githubapiconsumer.exception.UserNotFoundException;
 import com.example.githubapiconsumer.response.ErrorResponse;
 
@@ -37,21 +36,23 @@ public class ExceptionController {
 
     }
 
-    @ExceptionHandler({ WebClientResponseException.class, ResponseStatusException.class })
+    @ExceptionHandler(WebClientResponseException.class)
     public ResponseEntity<ErrorResponse> handleWebClientResponseException(WebClientResponseException e) {
 
-        log.error("Error with known status code!", e);
+        log.error("Webclient response with error code!", e);
 
         ErrorResponse errorData = new ErrorResponse(e.getStatusCode().value(), e.getMessage());
 
         return new ResponseEntity<>(errorData, e.getStatusCode());
     }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException e) {
-        log.error("No url found for request", e);
-        ErrorResponse errorData = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "URL not found");
-        return new ResponseEntity<>(errorData, HttpStatus.NOT_FOUND);
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseException(ResponseStatusException e) {
+        log.error("Error with known status code!", e);
+
+        ErrorResponse errorData = new ErrorResponse(e.getStatusCode().value(), e.getMessage());
+
+        return new ResponseEntity<>(errorData, e.getStatusCode());
     }
 
 }

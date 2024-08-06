@@ -48,9 +48,9 @@ public class GitHubUserController {
         return client.get()
                 .uri("/repos/{username}/{repoName}/branches", username, info.name())
                 .retrieve()
-                .bodyToFlux(Branch.class) //
+                .bodyToFlux(Branch.class)
                 .collectList()
-                .map(branchInfos -> {
+                .map(branchInfos -> { // branchInfos is a List unpacked from Mono<>
                     List<BranchResponse> branches = new ArrayList<>(branchInfos.size());
                     for (Branch branchInfo : branchInfos) {
                         branches.add(new BranchResponse(branchInfo.name(), branchInfo.lastCommitSha()));

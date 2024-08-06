@@ -22,104 +22,104 @@ import java.util.List;
 @WireMockTest(httpPort = 8088)
 public class GitHubAPIConsumerTests {
 
-        @Autowired
-        private WebTestClient webTestClient;
+    @Autowired
+    private WebTestClient webTestClient;
 
-        @Test
-        void testUserNotFound() {
-                stubFor(
-                                WireMock.get(urlMatching("/users/usernotexist/repos"))
-                                                .willReturn(aResponse().withStatus(404)));
+    @Test
+    void testUserNotFound() {
+        stubFor(
+                WireMock.get(urlMatching("/users/usernotexist/repos"))
+                        .willReturn(aResponse().withStatus(404)));
 
-                webTestClient.get().uri("/users/usernotexist")
-                                .exchange()
-                                .expectStatus().isNotFound()
-                                .expectBody(ErrorResponse.class);
-        }
+        webTestClient.get().uri("/users/usernotexist")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(ErrorResponse.class);
+    }
 
-        @Test
-        void testAllRepositoriesForked() {
+    @Test
+    void testAllRepositoriesForked() {
 
-                stubFor(
-                                WireMock.get(urlMatching("/users/testuser/repos"))
-                                                .willReturn(okJson(
-                                                                """
-                                                                                [
-                                                                                    {"name": "repo1", "fork": true, "owner": {"login": "testuser"}},
-                                                                                    {"name": "repo2", "fork": true, "owner": {"login": "testuser"}}
-                                                                                ]
-                                                                                """)));
+        stubFor(
+                WireMock.get(urlMatching("/users/testuser/repos"))
+                        .willReturn(okJson(
+                                """
+                                        [
+                                            {"name": "repo1", "fork": true, "owner": {"login": "testuser"}},
+                                            {"name": "repo2", "fork": true, "owner": {"login": "testuser"}}
+                                        ]
+                                        """)));
 
-                webTestClient.get().uri("/users/testuser")
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectBodyList(RepositoryResponse.class)
-                                .hasSize(0);
-        }
+        webTestClient.get().uri("/users/testuser")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RepositoryResponse.class)
+                .hasSize(0);
+    }
 
-        @Test
-        void testProperResponse() {
+    @Test
+    void testProperResponse() {
 
-                stubFor(
-                                WireMock.get(urlMatching("/users/properuser/repos"))
-                                                .willReturn(okJson(
-                                                                """
-                                                                                [
-                                                                                {"name": "repo1", "owner": {"login": "properuser"},"fork": true},
-                                                                                {"name": "repo2", "owner": {"login": "properuser"}, "fork": false},
-                                                                                {"name": "repo3", "owner": {"login": "properuser"}, "fork": false},
-                                                                                {"name": "repo4", "owner": {"login": "properuser"}, "fork": true}
-                                                                                ]
-                                                                                """)));
+        stubFor(
+                WireMock.get(urlMatching("/users/properuser/repos"))
+                        .willReturn(okJson(
+                                """
+                                        [
+                                        {"name": "repo1", "owner": {"login": "properuser"},"fork": true},
+                                        {"name": "repo2", "owner": {"login": "properuser"}, "fork": false},
+                                        {"name": "repo3", "owner": {"login": "properuser"}, "fork": false},
+                                        {"name": "repo4", "owner": {"login": "properuser"}, "fork": true}
+                                        ]
+                                        """)));
 
-                stubFor(
-                                WireMock.get(urlMatching("/repos/properuser/repo2/branches"))
-                                                .willReturn(okJson(
-                                                                """
-                                                                                [
-                                                                                    {"name": "branch1", "commit": {"sha": "sha1"}},
-                                                                                    {"name": "branch2", "commit": {"sha": "sha2"}}
-                                                                                ]
-                                                                                """)));
+        stubFor(
+                WireMock.get(urlMatching("/repos/properuser/repo2/branches"))
+                        .willReturn(okJson(
+                                """
+                                        [
+                                            {"name": "branch1", "commit": {"sha": "sha1"}},
+                                            {"name": "branch2", "commit": {"sha": "sha2"}}
+                                        ]
+                                        """)));
 
-                stubFor(
-                                WireMock.get(urlMatching("/repos/properuser/repo3/branches"))
-                                                .willReturn(okJson(
-                                                                """
-                                                                                [
-                                                                                    {"name": "branch1", "commit": {"sha": "sha1"}},
-                                                                                    {"name": "branch2", "commit": {"sha": "sha2"}}
-                                                                                ]
-                                                                                """)));
+        stubFor(
+                WireMock.get(urlMatching("/repos/properuser/repo3/branches"))
+                        .willReturn(okJson(
+                                """
+                                        [
+                                            {"name": "branch1", "commit": {"sha": "sha1"}},
+                                            {"name": "branch2", "commit": {"sha": "sha2"}}
+                                        ]
+                                        """)));
 
-                webTestClient.get().uri("/users/properuser")
-                                .exchange()
-                                .expectStatus().isOk()
-                                .expectBodyList(RepositoryResponse.class)
-                                .hasSize(2)
-                                .contains(
-                                                new RepositoryResponse(
-                                                                "repo2",
-                                                                "properuser",
-                                                                List.of(
-                                                                                new BranchResponse("branch1", "sha1"),
-                                                                                new BranchResponse("branch2", "sha2"))),
+        webTestClient.get().uri("/users/properuser")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(RepositoryResponse.class)
+                .hasSize(2)
+                .contains(
+                        new RepositoryResponse(
+                                "repo2",
+                                "properuser",
+                                List.of(
+                                        new BranchResponse("branch1", "sha1"),
+                                        new BranchResponse("branch2", "sha2"))),
 
-                                                new RepositoryResponse(
-                                                                "repo3",
-                                                                "properuser",
-                                                                List.of(
-                                                                                new BranchResponse("branch1", "sha1"),
-                                                                                new BranchResponse("branch2",
-                                                                                                "sha2"))));
-        }
+                        new RepositoryResponse(
+                                "repo3",
+                                "properuser",
+                                List.of(
+                                        new BranchResponse("branch1", "sha1"),
+                                        new BranchResponse("branch2",
+                                                "sha2"))));
+    }
 
-        @Test
-        void testPathNotFound() {
+    @Test
+    void testPathNotFound() {
 
-                webTestClient.get().uri("/notexisting/path")
-                                .exchange()
-                                .expectStatus().isNotFound();
-        }
+        webTestClient.get().uri("/notexisting/path")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 
 }
