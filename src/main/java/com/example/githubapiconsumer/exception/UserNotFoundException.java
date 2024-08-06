@@ -1,4 +1,4 @@
-package com.example.githubapiconsumer;
+package com.example.githubapiconsumer.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String username) {

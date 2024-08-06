@@ -1,9 +1,9 @@
-package com.example.githubapiconsumer;  
+package com.example.githubapiconsumer.githubdata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record BranchInfo(String name, Commit commit) { 
+public record Branch(String name, Commit commit) {
 
     public String lastCommitSha() {
         return commit != null ? commit.sha() : null;
